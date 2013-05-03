@@ -1,4 +1,4 @@
-require 'foreman_plugin_vsphere_add_remove_interface'
+require 'foreman_plugin_computeresource_add_remove_interface'
 
 module ForemanComputeresourceAddRemoveInterface
   class Engine < ::Rails::Engine

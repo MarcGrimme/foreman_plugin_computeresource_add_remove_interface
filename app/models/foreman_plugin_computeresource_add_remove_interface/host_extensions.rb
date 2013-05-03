@@ -60,8 +60,8 @@ module ForemanPluginComputeresourceAddRemoveInterface
        end
 
        def getSetting_2remove key
-         if SETTINGS[:pluginVsphereAddRemoveInterface] and SETTINGS[:pluginVsphereAddRemoveInterface][:enabled]
-           return getSetting_2remove_recursive(key, SETTINGS[:pluginVsphereAddRemoveInterface])
+         if SETTINGS[:pluginComputeresourceAddRemoveInterface] and SETTINGS[:pluginComputeresourceAddRemoveInterface][:enabled]
+           return getSetting_2remove_recursive(key, SETTINGS[:pluginComputeresourceAddRemoveInterface])
          else
            nil
          end
