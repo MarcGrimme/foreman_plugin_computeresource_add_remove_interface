@@ -1,6 +1,6 @@
 # Ensure that module is namespaced with plugin name
 
-module ForemanPluginVsphereAddRemoveInterface
+module ForemanPluginComputeresourceAddRemoveInterface
 	# Example: Create new instance and class methods on Foreman's Host model
 	module HostExtensions
 	 	extend ActiveSupport::Concern
@@ -17,9 +17,9 @@ module ForemanPluginVsphereAddRemoveInterface
 
        def add_interface_2remove
          if virtual_machine.is_a? Fog::Compute::Libvirt::Server
-           logger.debug "ForemanPluginVsphereAddRemoveInterface add_interface for #{get_interface_2remove}@libvirt"
+           logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
-           logger.debug "ForemanPluginVsphereAddRemoveInterface add_interface for #{get_interface_2remove}@vsphere"
+           logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@vsphere"
            virtual_machine.add_interface getSetting_2remove :vsphere
          else
            raise AttributeError "Cannot add interface for virtual machine #{virtual_machine}. Non supported compute_resource."
@@ -28,9 +28,9 @@ module ForemanPluginVsphereAddRemoveInterface
   
        def remove_interface_2remove
          if virtual_machine.is_a? Fog::Compute::Libvirt::Server
-           logger.debug "ForemanPluginVsphereAddRemoveInterface remove_interface for #{get_interface_remove}@libvirt"
+           logger.debug "ForemanPluginComputeresourceAddRemoveInterface remove_interface for #{get_interface_remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
-           logger.debug "ForemanPluginVsphereAddRemoveInterface remove_interface for #{get_interface_2remove}@vsphere"
+           logger.debug "ForemanPluginComputeresourceAddRemoveInterface remove_interface for #{get_interface_2remove}@vsphere"
            virtual_machine.destroy_interface get_interface_2remove
          else
            raise AttributeError "Cannot remove interface for virtual machine #{virtual_machine}. Non supported compute_resource."

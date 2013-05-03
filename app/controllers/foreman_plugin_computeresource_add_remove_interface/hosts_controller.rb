@@ -1,5 +1,5 @@
 # Ensure that module is namespaced with plugin name
-module ForemanPluginVsphereAddRemoveInterface
+module ForemanPluginComputeresourceAddRemoveInterface
 
   # Example: Plugin's HostsController inherits from Foreman's HostsController
   class HostsController < ::HostsController

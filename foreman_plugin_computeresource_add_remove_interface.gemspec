@@ -2,7 +2,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
-  s.name        = "foreman_plugin_vsphere_add_remove_interface"
+  s.name        = "foreman_plugin_computeresource_add_remove_interface"
   s.version     = "0.1"
   s.date        = "2013-04-19"
   s.authors     = ["Marc Grimme"]
