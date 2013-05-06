@@ -11,8 +11,8 @@ module ForemanPluginComputeresourceAddRemoveInterface
 	#     after_destroy :do_that
 
 	# 	  execute custom hooks
-	     after_build :remove_interface_2remove
-       before_provision :add_interface_2remove
+	     after_build :add_interface_2remove
+       before_provision :remove_interface_2remove
 
 
        def add_interface_2remove
@@ -20,7 +20,15 @@ module ForemanPluginComputeresourceAddRemoveInterface
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@vsphere"
-           virtual_machine.add_interface getSetting_2remove :vsphere
+           interface=getSetting_2remove :vsphere
+           if not interface
+             logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Cannot setup now interface. Skipping."
+           elsif get_interface_2remove
+             logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Interface already existant won't add. Skipping."
+           else
+             virtual_machine.add_interface interface
+             @virtual_machine=nil
+           end
          else
            raise AttributeError "Cannot add interface for virtual machine #{virtual_machine}. Non supported compute_resource."
          end
@@ -31,7 +39,16 @@ module ForemanPluginComputeresourceAddRemoveInterface
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface remove_interface for #{get_interface_remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface remove_interface for #{get_interface_2remove}@vsphere"
-           virtual_machine.destroy_interface get_interface_2remove
+           interface=get_interface_2remove
+           if not interface
+             logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Could not find interface to remove. Skipping."
+           else
+             if getSetting :vsphere and getSetting(:force_powerOff) and virtual_machine.ready?
+               virtual_machine.destroy
+             end
+             virtual_machine.destroy_interface interface
+             @virtual_machine=nil
+           end
          else
            raise AttributeError "Cannot remove interface for virtual machine #{virtual_machine}. Non supported compute_resource."
          end
@@ -39,29 +56,36 @@ module ForemanPluginComputeresourceAddRemoveInterface
        
        def get_interface_2remove
          if compute_resource.is_a? Foreman::Model::Libvirt
-           virtual_machine.nics.select do | nic | valueInSetting_2remove([:libvirt, :network], nic.bridge) end.last
+           virtual_machine.nics.select do | nic | valueInSetting_2remove(:libvirt, nic) end.last
          else
-           virtual_machine.interfaces.select do | nic | valueInSetting_2remove([:vsphere, :network], nic.network) end.last
+           virtual_machine.interfaces.select do | nic | valueInSetting_2remove(:vsphere, nic) end.last
          end
        end
 
-       def valueInSetting_2remove key, value
+       def valueInSetting_2remove key, obj
          setting=getSetting_2remove key
-         if setting.is_a? Array
-           setting.each do | setting2 |
-             if setting2 == value
-               return true
+         if setting.is_a? Hash
+           setting.each do | name, value |
+             value2=obj.attributes[name]
+             if value2.is_a? Class
+               value2=value2.name.split("::")[-1]
+             end
+             if value.is_a? Class
+               value=value.name.split("::")[-1]
+             end
+             if not value.to_sym == value2.to_sym
+               return false
              end
            end
-           return false
+           return true
          else
            return setting == value
          end
        end
 
        def getSetting_2remove key
-         if SETTINGS[:pluginComputeresourceAddRemoveInterface] and SETTINGS[:pluginComputeresourceAddRemoveInterface][:enabled]
-           return getSetting_2remove_recursive(key, SETTINGS[:pluginComputeresourceAddRemoveInterface])
+         if getSetting and getSetting :enabled
+           return getSetting_2remove_recursive(key, getSetting)
          else
            nil
          end
@@ -76,6 +100,14 @@ module ForemanPluginComputeresourceAddRemoveInterface
            return hash[keys]
          else
            return nil
+         end
+       end
+
+       def getSetting param=nil
+         if not param
+           SETTINGS[:pluginComputeresourceAddRemoveInterface]
+         else
+           SETTINGS[:pluginComputeresourceAddRemoveInterface][param]
          end
        end
 
