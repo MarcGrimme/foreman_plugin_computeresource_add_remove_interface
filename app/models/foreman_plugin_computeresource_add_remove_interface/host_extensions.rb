@@ -77,6 +77,15 @@ module ForemanPluginComputeresourceAddRemoveInterface
          end
        end
 
+       def mac
+         interface=get_interface_2remove
+         if interface
+           interface.mac
+         else
+           super
+         end
+       end
+
        def valueInSetting setting, obj
          if setting.is_a? Hash
            setting.each do | name, value |
