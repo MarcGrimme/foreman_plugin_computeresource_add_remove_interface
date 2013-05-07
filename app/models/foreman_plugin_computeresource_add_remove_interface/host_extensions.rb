@@ -26,11 +26,17 @@ module ForemanPluginComputeresourceAddRemoveInterface
            elsif get_interface_2remove
              logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Interface already existant won't add. Skipping."
            else
+             if getSetting(:restorePowerState)
+               powerstate=virtual_machine.ready?
+             end
              if getSetting(:forcePowerOff) and virtual_machine.ready?
                virtual_machine.stop :force=>true
              end
              virtual_machine.add_interface interface
              @virtual_machine=nil
+             if powerstate
+               virtual_machine.start
+             end
            end
          else
            raise AttributeError "Cannot add interface for virtual machine #{virtual_machine}. Non supported compute_resource."
@@ -46,11 +52,17 @@ module ForemanPluginComputeresourceAddRemoveInterface
            if not interface
              logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Could not find interface to remove. Skipping."
            else
+             if getSetting(:restorePowerState)
+               powerstate=virtual_machine.ready?
+             end
              if getSetting(:forcePowerOff) and virtual_machine.ready?
                virtual_machine.stop :force=>true
              end
              virtual_machine.destroy_interface interface
              @virtual_machine=nil
+             if powerstate
+               virtual_machine.start
+             end
            end
          else
            raise AttributeError "Cannot remove interface for virtual machine #{virtual_machine}. Non supported compute_resource."
@@ -82,7 +94,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
            end
            return true
          else
-           return setting == value
+           return setting == obj
          end
        end
 
