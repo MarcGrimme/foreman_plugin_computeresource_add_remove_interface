@@ -20,7 +20,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@vsphere"
-           interface=getSetting_2remove :vsphere
+           interface=getSetting_2add :vsphere
            if not interface
              logger.warn "ForemanPluginComputeresourceAddRemoveInterface: Cannot setup now interface. Skipping."
            elsif get_interface_2remove
@@ -71,14 +71,13 @@ module ForemanPluginComputeresourceAddRemoveInterface
        
        def get_interface_2remove
          if compute_resource.is_a? Foreman::Model::Libvirt
-           virtual_machine.nics.select do | nic | valueInSetting_2remove(:libvirt, nic) end.last
+           virtual_machine.nics.select do | nic | valueInSetting(getSetting_2remove(:libvirt), nic) end.last
          else
-           virtual_machine.interfaces.select do | nic | valueInSetting_2remove(:vsphere, nic) end.last
+           virtual_machine.interfaces.select do | nic | valueInSetting(getSetting_2remove(:vsphere), nic) end.last
          end
        end
 
-       def valueInSetting_2remove key, obj
-         setting=getSetting_2remove key
+       def valueInSetting setting, obj
          if setting.is_a? Hash
            setting.each do | name, value |
              value2=obj.attributes[name]
@@ -98,15 +97,23 @@ module ForemanPluginComputeresourceAddRemoveInterface
          end
        end
 
+       def getSetting_2add key
+         if getSetting key and getSetting :enabled and getSetting(key).has_key? :add
+           return getSetting(key)[:add]
+         else
+           nil
+         end
+       end
+
        def getSetting_2remove key
-         if getSetting and getSetting :enabled
-           return getSetting_2remove_recursive(key, getSetting)
+         if getSetting key and getSetting :enabled and getSetting(key).has_key? :remove
+           return getSetting(key)[:remove]
          else
            nil
          end
        end
        
-       def getSetting_2remove_recursive keys, hash
+       def getSetting_recursive keys, hash
          if keys.is_a? Array and hash.has_key? keys.first
            key=keys.first
            keys=keys.pop
