@@ -29,11 +29,12 @@ module ForemanPluginComputeresourceAddRemoveInterface
              if getSetting(:restorePowerState)
                powerstate=virtual_machine.ready?
              end
-             if getSetting(:forcePowerOff) and virtual_machine.ready?
+             if getSetting(:forcePowerOff)
                virtual_machine.stop :force=>true
              end
              virtual_machine.add_interface interface
              @virtual_machine=nil
+             setTFTP
              if powerstate
                virtual_machine.start
              end
@@ -58,6 +59,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
              if getSetting(:forcePowerOff) and virtual_machine.ready?
                virtual_machine.stop :force=>true
              end
+             delTFTP
              virtual_machine.destroy_interface interface
              @virtual_machine=nil
              if powerstate
@@ -71,9 +73,43 @@ module ForemanPluginComputeresourceAddRemoveInterface
        
        def get_interface_2remove
          if compute_resource.is_a? Foreman::Model::Libvirt
-           virtual_machine.nics.select do | nic | valueInSetting(getSetting_2remove(:libvirt), nic) end.last
+           virtual_machine.nics.select do | nic | valueInSetting(getSetting_2remove(:libvirt), nic) end.last if virtual_machine
          else
-           virtual_machine.interfaces.select do | nic | valueInSetting(getSetting_2remove(:vsphere), nic) end.last
+           virtual_machine.interfaces.select do | nic | valueInSetting(getSetting_2remove(:vsphere), nic) end.last if virtual_machine
+         end
+       end
+
+       def install_subnet
+         Subnet.find_by_name(getSetting :installSubnet) if get_interface_2remove
+       end
+       def tftp?
+         !!(install_subnet and install_subnet.tftp?) and managed? and capabilities.include?(:build)
+       end
+
+       def tftp
+         install_subnet.tftp_proxy(:variant => operatingsystem.pxe_variant) if tftp?
+       end
+
+       def setTFTP
+         logger.info "ForemanPluginComputeresourceAddRemoveInterface: Add the TFTP configuration for #{name}"
+         tftp.set mac, :pxeconfig => generate_pxe_template
+       rescue => e
+         failure "ForemanPluginComputeresourceAddRemoveInterface: Failed to set TFTP: #{proxy_error e}"
+       end
+
+       def deleteTFTP
+         logger.info "ForemanPluginComputeresourceAddRemoveInterface: Remove the TFTP configuration for #{name}"
+         tftp.delete mac
+       rescue => e
+         failure "ForemanPluginComputeresourceAddRemoveInterface: Failed to delete TFTP: #{proxy_error e}"
+       end
+
+       def mac
+         interface=get_interface_2remove
+         if interface
+           interface.mac
+         else
+           super
          end
        end
 
@@ -143,7 +179,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
        end
 
        def virtual_machine
-         @virtual_machine||=compute_resource.find_vm_by_uuid(self.uuid)
+         @virtual_machine||=compute_resource.find_vm_by_uuid(self.uuid) if self.uuid
        end
        
        def compute_resource
