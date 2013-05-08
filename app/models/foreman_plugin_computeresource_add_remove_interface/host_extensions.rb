@@ -30,12 +30,14 @@ module ForemanPluginComputeresourceAddRemoveInterface
                powerstate=virtual_machine.ready?
              end
              if getSetting(:forcePowerOff) and virtual_machine.ready?
+               logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Stop #{@name}")
                virtual_machine.stop :force=>true
              end
              virtual_machine.add_interface interface
              @virtual_machine=nil
              setTFTP
              if powerstate and not virtual_machine.ready?
+               logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
                virtual_machine.start
              end
            end
@@ -57,12 +59,14 @@ module ForemanPluginComputeresourceAddRemoveInterface
                powerstate=virtual_machine.ready?
              end
              if getSetting(:forcePowerOff) and virtual_machine.ready?
+               logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Stop #{@name}")
                virtual_machine.stop :force=>true
              end
              delTFTP
              virtual_machine.destroy_interface interface
              @virtual_machine=nil
              if powerstate and not virtual_machine.ready?
+               logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
                virtual_machine.start
              end
            end
