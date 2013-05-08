@@ -1,6 +1,5 @@
 Rails.application.routes.draw do
 
   #Example
-  #match 'new_action', :to => 'foreman_plugin_template/hosts#new_action'
-
+  match 'myunattended/(:action/(:id(.format)))', :to => 'foreman_plugin_computeresource_add_remove_interface/myunattended'
 end
