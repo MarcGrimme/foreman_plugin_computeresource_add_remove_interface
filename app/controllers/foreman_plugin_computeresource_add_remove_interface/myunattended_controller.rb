@@ -118,7 +118,6 @@ module ForemanPluginComputeresourceAddRemoveInterface
 
   def find_host_by_ip_or_mac
     # try to find host based on our client ip address
-debugger
     ip = request.env["action_dispatch.request.query_parameters"]["HTTP_X_REMOTE_ADDR"]
 
     # check if someone is asking on behave of another system (load balance etc)
@@ -143,7 +142,9 @@ debugger
       end
     end
     # we try to match first based on the MAC, falling back to the IP
-    Host.where(mac_list.empty? ? { :ip => ip } : ["lower(mac) IN (?)", mac_list]).first
+    host=Host.where(mac_list.empty? ? { :ip => ip } : ["lower(mac) IN (?)", mac_list]).first
+    host.overwriteForcePower=true
+    return host
   end
 
   def allowed_to_install?

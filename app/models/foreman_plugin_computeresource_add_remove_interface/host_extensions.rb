@@ -5,6 +5,8 @@ module ForemanPluginComputeresourceAddRemoveInterface
 	module HostExtensions
 	 	extend ActiveSupport::Concern
 
+    attr_accessor :overwriteForcePower
+
 	  included do
 	# 	  execute standard callbacks
 	     after_create :add_interface_2remove
@@ -29,14 +31,14 @@ module ForemanPluginComputeresourceAddRemoveInterface
              if getSetting(:restorePowerState)
                powerstate=virtual_machine.ready?
              end
-             if getSetting(:forcePowerOff) and virtual_machine.ready?
+             if getSetting(:forcePowerOff) and not overwriteForcePower and virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Stop #{@name}")
                virtual_machine.stop :force=>true
              end
              virtual_machine.add_interface interface
              @virtual_machine=nil
              setTFTP
-             if powerstate and not virtual_machine.ready?
+             if powerstate and not overwriteForcePower and not virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
                virtual_machine.start
              end
@@ -58,14 +60,14 @@ module ForemanPluginComputeresourceAddRemoveInterface
              if getSetting(:restorePowerState)
                powerstate=virtual_machine.ready?
              end
-             if getSetting(:forcePowerOff) and virtual_machine.ready?
+             if getSetting(:forcePowerOff) and not overwriteForcePower and virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Stop #{@name}")
                virtual_machine.stop :force=>true
              end
              delTFTP
              virtual_machine.destroy_interface interface
-             @virtual_machine=nil
-             if powerstate and not virtual_machine.ready?
+             @virtual_machine=nils
+             if powerstate and not overwriteForcePower and not virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
                virtual_machine.start
              end
