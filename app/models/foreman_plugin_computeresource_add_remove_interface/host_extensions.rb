@@ -64,9 +64,9 @@ module ForemanPluginComputeresourceAddRemoveInterface
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Stop #{@name}")
                virtual_machine.stop :force=>true
              end
-             delTFTP
+             deleteTFTP
              virtual_machine.destroy_interface interface
-             @virtual_machine=nils
+             @virtual_machine=nil
              if powerstate and not overwriteForcePower and not virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
                virtual_machine.start
