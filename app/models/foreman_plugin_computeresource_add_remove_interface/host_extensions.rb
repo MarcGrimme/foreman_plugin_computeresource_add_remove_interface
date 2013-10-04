@@ -18,6 +18,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
 
 
        def add_interface_2remove
+         return if not self.respond_to?(:managed) or not self.managed
          if virtual_machine.is_a? Fog::Compute::Libvirt::Server
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface add_interface for #{get_interface_2remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
@@ -49,6 +50,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
        end
   
        def remove_interface_2remove
+         return if not self.respond_to?(:managed) or not self.managed
          if virtual_machine.is_a? Fog::Compute::Libvirt::Server
            logger.debug "ForemanPluginComputeresourceAddRemoveInterface remove_interface for #{get_interface_remove}@libvirt"
          elsif virtual_machine.is_a? Fog::Compute::Vsphere::Server
@@ -65,7 +67,7 @@ module ForemanPluginComputeresourceAddRemoveInterface
                virtual_machine.stop :force=>true
              end
              deleteTFTP
-             virtual_machine.destroy_interface interface
+             virtual_machine.destroy_interface({ :interface => interface })
              @virtual_machine=nil
              if powerstate and not overwriteForcePower and not virtual_machine.ready?
                logger.debug("ForemanPluginComputeresourceAddRemoveInterface: Start #{@name}")
@@ -140,7 +142,9 @@ module ForemanPluginComputeresourceAddRemoveInterface
        end
 
        def getSetting_2add key
-         if getSetting key and getSetting :enabled and getSetting(key).has_key? :add
+         if getSetting "#{key}_add" then
+           return getSetting "#{key}_add"
+         elsif getSetting key and getSetting :enabled and getSetting(key).has_key? :add
            return getSetting(key)[:add]
          else
            nil
@@ -167,9 +171,17 @@ module ForemanPluginComputeresourceAddRemoveInterface
          end
        end
 
-       def getSetting param=nil
-         if not param
-           SETTINGS[:pluginComputeresourceAddRemoveInterface]
+       def getSetting param
+         if hostgroup.parameters(true)["compute_resource_add_remove_interface_#{param.to_s}"] then
+           begin 
+             JSON.parse(@hostgroup.parameters(true)["compute_resource_add_remove_interface_#{param.to_s}"][:value]) 
+           rescue 
+             begin
+               eval hostgroup.parameters(true)["compute_resource_add_remove_interface_#{param.to_s}"][:value]
+             rescue
+               hostgroup.parameters(true)["compute_resource_add_remove_interface_#{param.to_s}"][:value]
+             end
+           end
          else
            SETTINGS[:pluginComputeresourceAddRemoveInterface][param]
          end
