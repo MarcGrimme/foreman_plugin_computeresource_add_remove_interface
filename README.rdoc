@@ -1,3 +1,0 @@
-= ForemanPluginComputeresourceAddRemoveInterface
-
-Adds or removes a given interface to a VMware guest when build and removes it afterwards.
